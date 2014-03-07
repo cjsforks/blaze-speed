@@ -3,21 +3,19 @@
 </body>
 
 <template name="main">
-<p>
+  <p>
     This is a fork of <a href="http://jsfiddle.net/jashkenas/CGSd5/" target="_top">jashkenas's Ember/Backbone</a> benchmark to include React. Note that this is just a simple benchmark: you wouldn't be doing this in an actual app.
-</p>
+  </p>
 
-<button onclick="runBlaze()">Animate with Blaze</button>
+  <button onclick="runBlaze()">Animate with Blaze</button>
 
-<p id="timing">&nbsp;</p>
+  <p id="timing">&nbsp;</p>
 
-<div id="grid">
+  <div id="grid">
     {{#each circles}}
       <div class="box-view">
-        <div class="box" style="{{style}}"> {{content2}}</div>
+        <div class="box" style="top: {{top}}px; left: {{left}}px; background: {{background}}"> {{content2}}</div>
       </div>
     {{/each}}
-</div>
-
-
+  </div>
 </template>
