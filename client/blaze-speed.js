@@ -1,62 +1,92 @@
 // Change N to change the number of drawn circles.
 
 var N = 100;
+var resultList = new Meteor.Collection(null)
 
-Template.main.circles = _.range(1, N);
-Template.main.content2 = function () {
-  return (this.valueOf() === 1) ? Session.get("counter") % 100 : 1;
+window.reset = function() {
+  r = resultList.find({}).fetch();
+  r.forEach(function(r) { 
+      resultList.remove({ _id: r._id });
+  });
+  clearTimeout(timeout);
+  blazeInit();
+  Session.set('stop', true);
 };
 
-Template.main.background = function () {
-  var counter = (this.valueOf() === 1) ? Session.get("counter") : 1;
+Template.main.created = function() {
+  Session.set('stop', true);
+  Session.set('max', 1);
+  resultList.insert({ max: 0, result: 'init'});
+};
+
+Template.main.resultList = function(){
+    return resultList.find({}, { sort: {max: -1}});
+};
+
+Template.main.circles = function(){
+    list = _.range(1, N);
+    return _.map(list, function(i) {
+        return { numb: i }
+    })
+};
+
+Template.main.content2 = function (numb) {
+  var counter = (numb < Session.get('max')) ? Session.get("counter") : 1;
+  return counter;
+};
+
+Template.main.background = function (numb) {
+  var counter = (numb < Session.get('max')) ? Session.get("counter") : 1;
   return "rgb(0, 0, " + (counter % 255) + ")";
 };
 
-Template.main.top = function () {
-  var counter = (this.valueOf() === 1) ? Session.get("counter") : 1;
+Template.main.top = function (numb) {
+  var counter = (numb < Session.get('max')) ? Session.get("counter") : 1;
   return Math.sin(counter / 10) * 10;
 };
 
-Template.main.left = function () {
-  var counter = (this.valueOf() === 1) ? Session.get("counter") : 1;
+Template.main.left = function (numb) {
+  var counter = (numb < Session.get('max')) ? Session.get("counter") : 1;
   return Math.cos(counter / 10) * 10;
 };
 
 var blazeInit = function() {
   Session.set("counter", 0);
+  totalTime = 0;
 };
 
 var blazeAnimate = function() {
   Session.set("counter", Session.get("counter") + 1);
   Deps.flush();
 };
-
 window.runBlaze = function() {
-  reset();
-  blazeInit();
-  benchmarkLoop(blazeAnimate);
+      reset();
+      console.log('runBlaze');
+      Session.set('stop', false);
+      blazeInit();
+      _.defer(benchmarkLoop.bind(this, blazeAnimate, 1, 1));
 };
 
 
 window.timeout = null;
 window.totalTime = null;
-window.loopCount = null;
-window.reset = function() {
-  $('#timing').html('&nbsp;');
-  clearTimeout(timeout);
-  loopCount = 0;
-  totalTime = 0;
-};
-
-window.benchmarkLoop = function(fn) {
+window.benchmarkLoop = function(fn, max, loopCount) {
+  if (Session.get('stop'))
+      return;
+  if(max === N)
+      return;
   var startDate = new Date();
   fn();
   var endDate = new Date();
   totalTime += endDate - startDate;
-  loopCount++;
-  if (loopCount % 20 === 0) {
-    $('#timing').text('Performed ' + loopCount + ' iterations in ' + totalTime + ' ms (average ' + (totalTime / loopCount).toFixed(2) + ' ms per loop).');
+  if (loopCount === 100) {
+    message = ' Performed ' + loopCount + ' iterations in ' + totalTime + ' ms (average ' + (totalTime / loopCount).toFixed(2) + ' ms per loop).'
+    result = { max: max, result: message };
+    resultList.insert(result);
+    Session.set('max', max);
+    blazeInit();
+    return _.defer(benchmarkLoop, fn, max+1, 1);
   }
-  timeout = _.defer(benchmarkLoop, fn);
+  return _.defer(benchmarkLoop, fn, max, ++loopCount);
 };
 

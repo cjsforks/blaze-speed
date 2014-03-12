@@ -8,14 +8,21 @@
   </p>
 
   <button onclick="runBlaze()">Animate with Blaze</button>
-
-  <p id="timing">&nbsp;</p>
-
+  <button onclick="reset()">Stop</button>
   <div id="grid">
     {{#each circles}}
       <div class="box-view">
-        <div class="box" style="top: {{top}}px; left: {{left}}px; background: {{background}}"> {{content2}}</div>
+        <div class="box" style="top: {{top numb}}px; left: {{left numb}}px; background: {{background numb}}"> {{content2 numb}}</div>
       </div>
     {{/each}}
   </div>
+  <p id="timing">
+  <h2>Results</h2>
+  <ul>
+  {{#each resultList }}
+  <li><span>Animate {{ max }} circles:</span>{{ result }}</li>
+  {{/each}}
+  </ul>
+  </p>
+
 </template>
