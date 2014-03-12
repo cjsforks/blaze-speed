@@ -3,8 +3,8 @@
 </body>
 
 <template name="main">
-  <p>
-    This is a fork of <a href="http://jsfiddle.net/jashkenas/CGSd5/" target="_top">jashkenas's Ember/Backbone</a> benchmark to include React. Note that this is just a simple benchmark: you wouldn't be doing this in an actual app.
+<p>
+<a href="https://github.com/cjsforks/blaze-speed">charlesjshort/blaze-speed</a> is a fork of <a href="https://github.com/avital/blaze-speed">avital/blaze-speed</a> which is a fork of <a href="http://jsfiddle.net/jashkenas/CGSd5/" target="_top">jashkenas's Ember/Backbone</a> benchmark to include React. Note that this is just a simple benchmark: you wouldn't be doing this in an actual app.
   </p>
 
   <button onclick="runBlaze()">Animate with Blaze</button>
@@ -18,11 +18,18 @@
   </div>
   <p id="timing">
   <h2>Results</h2>
+  {{#if dataFinished }}
+    {{> rateChart rateData }}
+  {{/if}}
   <ul>
   {{#each resultList }}
   <li><span>Animate {{ max }} circles:</span>{{ result }}</li>
   {{/each}}
   </ul>
   </p>
+</template>
 
+<template name="rateChart">
+  <h3>Millisecond per loop</h3>
+  <canvas id="rateChart" width="400" height="400"></canvas>
 </template>

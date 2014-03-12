@@ -1,6 +1,6 @@
 // Change N to change the number of drawn circles.
 
-var N = 42;
+var N = 23;
 var resultList = new Meteor.Collection(null)
 
 window.reset = function() {
@@ -10,6 +10,7 @@ window.reset = function() {
   });
   clearTimeout(timeout);
   blazeInit();
+  Session.set('dataFinished', false);
   Session.set('stop', true);
 };
 
@@ -61,7 +62,6 @@ var blazeAnimate = function() {
 };
 window.runBlaze = function() {
       reset();
-      console.log('runBlaze');
       Session.set('stop', false);
       blazeInit();
       _.defer(benchmarkLoop.bind(this, blazeAnimate, 1, 1));
@@ -74,8 +74,10 @@ window.lastTime = 0;
 window.benchmarkLoop = function(fn, max, loopCount) {
   if (Session.get('stop'))
       return;
-  if(max > N)
+  if (max > N) {
+      Session.set('dataFinished', true);
       return;
+  };
   var startDate = new Date();
   fn();
   var endDate = new Date();
@@ -84,7 +86,7 @@ window.benchmarkLoop = function(fn, max, loopCount) {
     thisTime = (totalTime / loopCount);
     delta = thisTime - lastTime
     message = ' Performed ' + loopCount + ' iterations in ' + totalTime + ' ms , average ' + thisTime.toFixed(2) + ' ms per loop, delta: '+delta.toFixed(4)
-    result = { max: max, result: message };
+    result = { delta: delta, rate: thisTime, max: max, result: message };
     resultList.insert(result);
     Session.set('max', max);
     blazeInit();
@@ -93,4 +95,48 @@ window.benchmarkLoop = function(fn, max, loopCount) {
   }
   return _.defer(benchmarkLoop, fn, max, ++loopCount);
 };
+
+
+Template.main.rateData = function () {
+    _results = resultList.find().fetch()
+    rateData = _.pluck(_results, 'rate');
+    cData = {
+            labels:  _.range(1, N),
+            datasets: [ {
+                fillColor: "rgba(220,220,220,0.5)",
+                strokeColor: "rgba(202,202,202, 1)",
+                pointColor: "rgba(121,233, 15, 0.8)",
+                pointStrokeColor: "#fff",
+                data: rateData || null
+            }]
+    }
+    return cData
+};
+
+Template.main.dataFinished = function () {
+    return Session.get('dataFinished');
+};
+
+Template.rateChart.created = function() {
+};
+
+Template.rateChart.rendered = function(cData) {
+    var ctx= document.getElementById('rateChart').getContext('2d');
+    _results = resultList.find().fetch()
+    rateData = _.pluck(_results, 'rate');
+    if (rateData.length > 1) {
+        cData = {
+            labels:  _.range(1, N),
+            datasets: [ {
+                fillColor: "rgba(220,220,220,0.5)",
+                strokeColor: "rgba(202,202,202, 1)",
+                pointColor: "rgba(121,233, 15, 0.8)",
+                pointStrokeColor: "#fff",
+                data: rateData
+            }]
+        };
+        new Chart(ctx).Line(cData);
+    }
+};
+
 
