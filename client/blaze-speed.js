@@ -1,6 +1,6 @@
 // Change N to change the number of drawn circles.
 
-var N = 100;
+var N = 42;
 var resultList = new Meteor.Collection(null)
 
 window.reset = function() {
@@ -70,21 +70,25 @@ window.runBlaze = function() {
 
 window.timeout = null;
 window.totalTime = null;
+window.lastTime = 0;
 window.benchmarkLoop = function(fn, max, loopCount) {
   if (Session.get('stop'))
       return;
-  if(max === N)
+  if(max > N)
       return;
   var startDate = new Date();
   fn();
   var endDate = new Date();
   totalTime += endDate - startDate;
-  if (loopCount === 100) {
-    message = ' Performed ' + loopCount + ' iterations in ' + totalTime + ' ms (average ' + (totalTime / loopCount).toFixed(2) + ' ms per loop).'
+  if (loopCount === 88) {
+    thisTime = (totalTime / loopCount);
+    delta = thisTime - lastTime
+    message = ' Performed ' + loopCount + ' iterations in ' + totalTime + ' ms , average ' + thisTime.toFixed(2) + ' ms per loop, delta: '+delta.toFixed(4)
     result = { max: max, result: message };
     resultList.insert(result);
     Session.set('max', max);
     blazeInit();
+    lastTime = thisTime;
     return _.defer(benchmarkLoop, fn, max+1, 1);
   }
   return _.defer(benchmarkLoop, fn, max, ++loopCount);
